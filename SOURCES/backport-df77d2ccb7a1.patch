@@ -1,0 +1,191 @@
+From df77d2ccb7a1f1d39411966435f953e60fdaa1a3 Mon Sep 17 00:00:00 2001
+Message-Id: <df77d2ccb7a1f1d39411966435f953e60fdaa1a3.1692193771.git.edvin.torok@citrix.com>
+From: Oliver Yang <yangoliver@gmail.com>
+Date: Tue, 6 Jan 2015 08:58:52 +0800
+Subject: Classify PCI Sub-Class for better performance
+
+Current implementation just treats all serial bus devices as legacy
+devices, and use IRQ_LEGACY by default. But in fact, some serial
+bus controller like Fiber Channel, InfiniBand are high speed and
+high interrupt rate devices, which are similar with ethernet or
+storage devices. On my server with 6 Fiber Channel devices, all these
+devices interrupts could be bound to single CPUs under heavy work
+load(24Gbps Throughput). That caused serious performance issue. But
+if we classify all Fiber channel devices as storage class, which uses
+CORE_LEVEL by default, it could fix the problem by balance interrupt
+load among multiple cores.
+
+This fix uses PCI sub-class code to classify all serial bus devices,
+instead of just using major PCI class code.
+
+Here are the major changes,
+
+a. For Fiber Channel devices, uses IRQ_STORAGE
+b. For InfiniBand devices, uses IRQ_STORAGE
+c. All other devices, keep original classifications: IRQ_LEGACY
+
+Signed-off-by: Yong Yang <yangoliver@gmail.com>
+
+diff --git a/classify.c b/classify.c
+index 9d76fd7..6624678 100644
+--- a/classify.c
++++ b/classify.c
+@@ -25,33 +25,6 @@ char *classes[] = {
+ int map_class_to_level[8] =
+ { BALANCE_PACKAGE, BALANCE_CACHE, BALANCE_CORE, BALANCE_CORE, BALANCE_CORE, BALANCE_CORE, BALANCE_CORE, BALANCE_CORE };
+ 
+-
+-#define MAX_CLASS 0x12
+-/*
+- * Class codes lifted from pci spec, appendix D.
+- * and mapped to irqbalance types here
+- */
+-static short class_codes[MAX_CLASS] = {
+-	IRQ_OTHER,
+-	IRQ_SCSI,
+-	IRQ_ETH,
+-	IRQ_VIDEO,
+-	IRQ_OTHER,
+-	IRQ_OTHER,
+-	IRQ_LEGACY,
+-	IRQ_OTHER,
+-	IRQ_OTHER,
+-	IRQ_LEGACY,
+-	IRQ_OTHER,
+-	IRQ_OTHER,
+-	IRQ_LEGACY,
+-	IRQ_ETH,
+-	IRQ_SCSI,
+-	IRQ_OTHER,
+-	IRQ_OTHER,
+-	IRQ_OTHER,
+-};
+-
+ struct user_irq_policy {
+ 	int ban;
+ 	int level;
+@@ -65,6 +38,79 @@ static GList *cl_banned_irqs = NULL;
+ 
+ #define SYSDEV_DIR "/sys/bus/pci/devices"
+ 
++#define PCI_MAX_CLASS 0x12
++#define PCI_MAX_SERIAL_SUBCLASS 0x10
++
++static int get_pci_irq_class(int pci_class)
++{
++	int major = pci_class >> 16;
++	int sub = (pci_class & 0xFF00) >> 8;
++	short irq_class = IRQ_OTHER;
++	/*
++	 * Class codes lifted from pci spec, appendix D.
++	 * and mapped to irqbalance types here.
++	 *
++	 * -1 indicates that needs PCI sub-class code.
++	 */
++	static short major_class_codes[PCI_MAX_CLASS] = {
++		IRQ_OTHER,
++		IRQ_SCSI,
++		IRQ_ETH,
++		IRQ_VIDEO,
++		IRQ_OTHER,
++		IRQ_OTHER,
++		IRQ_LEGACY,
++		IRQ_OTHER,
++		IRQ_OTHER,
++		IRQ_LEGACY,
++		IRQ_OTHER,
++		IRQ_OTHER,
++		-1,
++		IRQ_ETH,
++		IRQ_SCSI,
++		IRQ_OTHER,
++		IRQ_OTHER,
++		IRQ_OTHER,
++	};
++
++	/*
++	 * All sub-class code for serial bus controllers.
++	 * The major class code is 0xc.
++	 */
++	static short serial_sub_codes[PCI_MAX_SERIAL_SUBCLASS] = {
++		IRQ_LEGACY,
++		IRQ_LEGACY,
++		IRQ_LEGACY,
++		IRQ_LEGACY,
++		IRQ_SCSI,
++		IRQ_LEGACY,
++		IRQ_SCSI,
++		IRQ_LEGACY,
++		IRQ_LEGACY,
++		IRQ_LEGACY,
++	};
++
++	/*
++	 * Check major class code first
++	 */
++
++	if (major >= PCI_MAX_CLASS)
++		return -1;
++
++	switch (major) {
++		case 0xc: /* Serial bus class */
++			if (sub >= PCI_MAX_SERIAL_SUBCLASS)
++				return -1;
++			irq_class = serial_sub_codes[sub];
++			break;
++		default: /* All other PCI classes */
++			irq_class = major_class_codes[major];
++			break;
++	}
++
++	return irq_class;
++}
++
+ static gint compare_ints(gconstpointer a, gconstpointer b)
+ {
+ 	const struct irq_info *ai = a;
+@@ -121,7 +167,8 @@ static int is_banned_irq(int irq)
+  */
+ static struct irq_info *add_one_irq_to_db(const char *devpath, int irq, struct user_irq_policy *pol)
+ {
+-	int class = 0;
++	int pci_class = 0;
++	int irq_class = IRQ_OTHER;
+ 	int rc;
+ 	struct irq_info *new, find;
+ 	int numa_node;
+@@ -165,25 +212,28 @@ static struct irq_info *add_one_irq_to_db(const char *devpath, int irq, struct u
+ 		goto get_numa_node;
+ 	}
+ 
+-	rc = fscanf(fd, "%x", &class);
++	rc = fscanf(fd, "%x", &pci_class);
+ 	fclose(fd);
+ 
+ 	if (!rc)
+ 		goto get_numa_node;
+ 
++
+ 	/*
+-	 * Restrict search to major class code
++	 * Map PCI class code to irq class
+ 	 */
+-	class >>= 16;
++	irq_class = get_pci_irq_class(pci_class);
+ 
+-	if (class >= MAX_CLASS)
++	if (irq_class < 0) {
++		log(TO_CONSOLE, LOG_WARNING, "Invalid PCI class code %d\n", pci_class);
+ 		goto get_numa_node;
++	}
+ 
+-	new->class = class_codes[class];
++	new->class = irq_class;
+ 	if (pol->level >= 0)
+ 		new->level = pol->level;
+ 	else
+-		new->level = map_class_to_level[class_codes[class]];
++		new->level = map_class_to_level[irq_class];
+ 
+ get_numa_node:
+ 	numa_node = -1;
