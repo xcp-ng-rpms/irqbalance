@@ -1,41 +1,41 @@
+%global package_speccommit 8c423b2d8bbd350a56bb33e5db5fc04ec5ebbf7e
+%global usver 1.0.7
+%global xsver 16
+%global xsrel %{xsver}%{?xscount}%{?xshash}
+%global package_srccommit v1.0.7
+
 Name:           irqbalance
 Version:        1.0.7
-Release:        11%{?dist}
+Release: %{?xsrel}%{?dist}
 Epoch:          3
 Summary:        IRQ balancing daemon
 
 Group:          System Environment/Base
 License:        GPLv2
 Url:            https://github.com/Irqbalance/irqbalance
-#Source0:        https://github.com/Irqbalance/irqbalance/archive/v%{version}.tar.gz
-
-Source0: https://code.citrite.net/rest/archive/latest/projects/XSU/repos/irqbalance/archive?at=v1.0.7&format=tar.gz&prefix=irqbalance-1.0.7#/irqbalance-1.0.7.tar.gz
-Source1: SOURCES/irqbalance/irqbalance.sysconfig
-Patch1: SOURCES/irqbalance/irqbalance-1.0.4-env-file-path.patch
-Patch2: SOURCES/irqbalance/irqbalance-1.0.6-man_IRQBALANCE_BANNED_CPUS.patch
-Patch3: SOURCES/irqbalance/irqbalance-1.0.7-ignore_affinity_hint.patch
-Patch4: SOURCES/irqbalance/irqbalance-1.0.8-removing-unused-variable-cache_stat.patch
-Patch5: SOURCES/irqbalance/irqbalance-1.0.8-Manpage-note-about-ignoring-of-pid-in-some-cases.patch
-Patch6: SOURCES/irqbalance/irqbalance-1.0.8-irqbalance-signal-handling-tuning.patch
-Patch7: SOURCES/irqbalance/irqbalance-1.0.8-Warning-when-irqbalance-hasn-t-root-privileges.patch
-Patch8: SOURCES/irqbalance/irqbalance-1.0.7-manpage-hostname.patch
-Patch9: SOURCES/irqbalance/irqbalance-1.0.8-import-__bitmap_parselist-from-Linux-kernel.patch
-Patch10: SOURCES/irqbalance/irqbalance-1.0.8-fix-cpulist_parse-definition-to-match-bitmap_parseli.patch
-Patch11: SOURCES/irqbalance/irqbalance-1.0.8-parse-isolcpus-from-proc-cmdline-to-set-up-banned_cp.patch
-Patch12: SOURCES/irqbalance/irqbalance-1.0.8-fix-memory-leak-in-classify-code.patch
-Patch13: SOURCES/irqbalance/irqbalance-1.0.8-separate-cmomand-line-banned-irqs.patch
-Patch14: SOURCES/irqbalance/irqbalance-1.0.8-parse-isolcpus-and-nohz-cpus-from-sysfs.patch
-Patch15: SOURCES/irqbalance/irqbalance-1.0.8-Invalid-parsing-for-isolated-and-nohz_full-cpu-masks.patch
-Patch16: SOURCES/irqbalance/irqbalance-1.0.9-irqbalance-set-IRQBALANCE_DEBUG-variable-implies-for.patch
-Patch17: SOURCES/irqbalance/irqbalance-node-package.patch
-Patch18: SOURCES/irqbalance/irqbalance-1.0.8-Balance-correctly-IRQs-reappearing.patch
-
-Patch19: irqbalance-1.5.0-procinterrupts-check-xen-dyn-event-more-flexible.patch
-
-Provides: gitsha(https://code.citrite.net/rest/archive/latest/projects/XSU/repos/irqbalance/archive?at=v1.0.7&format=tar.gz&prefix=irqbalance-1.0.7#/irqbalance-1.0.7.tar.gz) = 06089621e813f06d9ef33d680324654141f43088
-Provides: gitsha(https://code.citrite.net/rest/archive/latest/projects/XS/repos/irqbalance.pg/archive?at=v1.1.0&format=tar.gz#/irqbalance-v1.1.0.pg.tar.gz) = 1eba5e103f349b8ea139c5698396b9f28272c0b9
-Provides: gitsha(https://code.citrite.net/rest/archive/latest/projects/XSU/repos/irqbalance.centos/archive?at=imports%2Fc7%2Firqbalance-1.0.7-11.el7&format=tar.gz#/irqbalance-1.0.7.centos.tar.gz) = 2c362a3bf8227ee242356ed0094b3b115ce47ce0
-
+#Source0:        https://github.com/Irqbalance/irqbalance/archive/v%%{version}.tar.gz
+Source0: irqbalance-1.0.7.tar.gz
+Source1: irqbalance.sysconfig
+Patch0: irqbalance-1.0.4-env-file-path.patch
+Patch1: irqbalance-1.0.6-man_IRQBALANCE_BANNED_CPUS.patch
+Patch2: irqbalance-1.0.7-ignore_affinity_hint.patch
+Patch3: irqbalance-1.0.8-removing-unused-variable-cache_stat.patch
+Patch4: irqbalance-1.0.8-Manpage-note-about-ignoring-of-pid-in-some-cases.patch
+Patch5: irqbalance-1.0.8-irqbalance-signal-handling-tuning.patch
+Patch6: irqbalance-1.0.8-Warning-when-irqbalance-hasn-t-root-privileges.patch
+Patch7: irqbalance-1.0.7-manpage-hostname.patch
+Patch8: irqbalance-1.0.8-import-__bitmap_parselist-from-Linux-kernel.patch
+Patch9: irqbalance-1.0.8-fix-cpulist_parse-definition-to-match-bitmap_parseli.patch
+Patch10: irqbalance-1.0.8-parse-isolcpus-from-proc-cmdline-to-set-up-banned_cp.patch
+Patch11: irqbalance-1.0.8-fix-memory-leak-in-classify-code.patch
+Patch12: irqbalance-1.0.8-separate-cmomand-line-banned-irqs.patch
+Patch13: irqbalance-1.0.8-parse-isolcpus-and-nohz-cpus-from-sysfs.patch
+Patch14: irqbalance-1.0.8-Invalid-parsing-for-isolated-and-nohz_full-cpu-masks.patch
+Patch15: irqbalance-1.0.9-irqbalance-set-IRQBALANCE_DEBUG-variable-implies-for.patch
+Patch16: irqbalance-node-package.patch
+Patch17: irqbalance-1.0.8-Balance-correctly-IRQs-reappearing.patch
+Patch18: irqbalance-1.5.0-procinterrupts-check-xen-dyn-event-more-flexible.patch
+Patch19: backport-df77d2ccb7a1.patch
 
 BuildRequires:  autoconf automake libtool libcap-ng
 BuildRequires:  glib2-devel pkgconfig libcap-ng-devel
@@ -44,6 +44,7 @@ BuildRequires:  numactl-devel
 BuildRequires:  systemd-units
 Requires: numactl-libs
 %endif
+%{?_cov_buildrequires}
 Requires(post): systemd-units
 Requires(postun):systemd-units
 Requires(preun):systemd-units
@@ -53,18 +54,19 @@ Requires(preun):systemd-units
 
 ExclusiveArch: %{ix86} x86_64 ia64 ppc ppc64 ppc64le %{arm} aarch64
 
-
 %description
 irqbalance is a daemon that evenly distributes IRQ load across
 multiple CPUs for enhanced performance.
 
 %prep
 %autosetup -p1
+%{?_cov_prepare}
 
 %build
 ./autogen.sh
 %{configure}
-CFLAGS="%{optflags}" make %{?_smp_mflags}
+export CFLAGS="%{optflags}"
+%{?_cov_wrap} make %{?_smp_mflags}
 
 %install
 install -D -p -m 0755 %{name} %{buildroot}%{_sbindir}/%{name}
@@ -74,6 +76,8 @@ install -D -p -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 install -d %{buildroot}%{_mandir}/man1/
 install -p -m 0644 ./irqbalance.1 %{buildroot}%{_mandir}/man1/
 
+%{?_cov_install}
+
 %files
 %defattr(-,root,root)
 %doc COPYING AUTHORS
@@ -81,6 +85,8 @@ install -p -m 0644 ./irqbalance.1 %{buildroot}%{_mandir}/man1/
 %{_unitdir}/irqbalance.service
 %{_mandir}/man1/*
 %config(noreplace) %{_sysconfdir}/sysconfig/irqbalance
+
+%{?_cov_results_package}
 
 %post
 %systemd_post irqbalance.service
@@ -97,7 +103,23 @@ if /sbin/chkconfig --level 3 irqbalance ; then
 fi
 /sbin/chkconfig --del irqbalance >/dev/null 2>&1 || :
 
+
 %changelog
+* Fri Sep 01 2023 Edwin Török <edwin.torok@cloud.com> - 1.0.7-16
+- Bump release and rebuild
+
+* Wed Aug 16 2023 Edwin Török <edwin.torok@cloud.com> - 1.0.7-15
+- CA-381591: classify FC devices as storage for interrupt balancing
+
+* Fri Feb 11 2022 Ross Lagerwall <ross.lagerwall@citrix.com> - 1.0.7-14
+- CP-38416: Enable static analysis
+
+* Fri Dec 04 2020 Ross Lagerwall <ross.lagerwall@citrix.com> - 3:1.0.7-13
+- CP-35517: Rebuild for koji
+
+* Wed Dec 11 2019 Tim Smith <tim.smith@citrix.com> - 3:1.0.7-12
+- Dropped xs3 from release
+
 * Mon Feb 05 2018 Petr Oros <poros@redhat.com> - 3:1.0.7-11
 - Balance correctly IRQs reappearing
 - Resolves: #1536373
