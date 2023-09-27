@@ -1,12 +1,12 @@
-%global package_speccommit 45cec4d2c7ba56661d6e179b862464d2c7cdc433
+%global package_speccommit 145d8275c2e41fe7c5271abb325d48377069eb82
 %global usver 1.0.7
-%global xsver 14
+%global xsver 15
 %global xsrel %{xsver}%{?xscount}%{?xshash}
 %global package_srccommit v1.0.7
 
 Name:           irqbalance
 Version:        1.0.7
-Release:        %{?xsrel}%{?dist}
+Release: %{?xsrel}%{?dist}
 Epoch:          3
 Summary:        IRQ balancing daemon
 
@@ -35,6 +35,7 @@ Patch15: irqbalance-1.0.9-irqbalance-set-IRQBALANCE_DEBUG-variable-implies-for.p
 Patch16: irqbalance-node-package.patch
 Patch17: irqbalance-1.0.8-Balance-correctly-IRQs-reappearing.patch
 Patch18: irqbalance-1.5.0-procinterrupts-check-xen-dyn-event-more-flexible.patch
+Patch19: backport-df77d2ccb7a1.patch
 
 BuildRequires:  autoconf automake libtool libcap-ng
 BuildRequires:  glib2-devel pkgconfig libcap-ng-devel
@@ -102,7 +103,11 @@ if /sbin/chkconfig --level 3 irqbalance ; then
 fi
 /sbin/chkconfig --del irqbalance >/dev/null 2>&1 || :
 
+
 %changelog
+* Wed Aug 16 2023 Edwin Török <edwin.torok@cloud.com> - 1.0.7-15
+- CA-381591: classify FC devices as storage for interrupt balancing
+
 * Fri Feb 11 2022 Ross Lagerwall <ross.lagerwall@citrix.com> - 1.0.7-14
 - CP-38416: Enable static analysis
 
